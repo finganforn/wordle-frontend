@@ -25,7 +25,7 @@ export default function App() {
 );	
 	
   
-  const [requiredPairs, setRequiredPairs] = useState([]);
+  const [requiredLetters, setRequiredLetters] = useState([]);
   const [excludedLetters, setExcludedLetters] = useState("");
   const [maxSeconds, setMaxSeconds] = useState(20);
   const [lang, setLang] = useState("en");
@@ -41,26 +41,55 @@ export default function App() {
   
   useEffect(() => {
     setCurrentWord(Array(wordLength).fill(""));
-    setRequiredPairs([]);
+    setRequiredLetters([]);
   }, [wordLength]);
   
   useEffect(() => {
 	  document.body.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
 	}, [darkMode]);
 
-  const addRequiredPair = () => {
-    setRequiredPairs([...requiredPairs, { letter: "", wrongIndex: 0 }]);
-  };
+  //const addRequiredPair = () => {
+  //  setRequiredPairs([...requiredPairs, { letter: "", wrongIndex: 0 }]);
+  //};
 
-  const updatePair = (index, key, value) => {
-    const updated = [...requiredPairs];
-    updated[index][key] = value;
-    setRequiredPairs(updated);
-  };
+  //const updatePair = (index, key, value) => {
+  //  const updated = [...requiredPairs];
+  //  updated[index][key] = value;
+  //  setRequiredPairs(updated);
+  //};
 
-  const removePair = (index) => {
-    setRequiredPairs(requiredPairs.filter((_, i) => i !== index));
-  };
+  //const removePair = (index) => {
+  //  setRequiredPairs(requiredPairs.filter((_, i) => i !== index));
+  //};
+  
+    const addRequiredLetter = () => {
+	  setRequiredLetters([
+		...requiredLetters,
+		{ letter: "", wrongPositions: [] }
+	  ]);
+	};
+	
+	const updateRequiredLetter = (index, value) => {
+	  const updated = [...requiredLetters];
+	  updated[index].letter = value;
+	  setRequiredLetters(updated);
+	};
+	
+	const toggleWrongPosition = (letterIndex, pos) => {
+	  const updated = [...requiredLetters];
+
+	  const list = updated[letterIndex].wrongPositions;
+
+	  if (list.includes(pos)) {
+		updated[letterIndex].wrongPositions =
+		  list.filter(p => p !== pos);
+	  } else {
+		updated[letterIndex].wrongPositions =
+		  [...list, pos];
+	  }
+
+	  setRequiredLetters(updated);
+	};
 
   const buildPayload = () => {
   const activeAlphabet = alphabets[lang];
@@ -68,12 +97,22 @@ export default function App() {
   const allowedLetters = activeAlphabet.filter(
     (letter) => !excludedLetters.includes(letter)
   );
+  
+    const reqLetters = [];
+	const reqIndices = [];
+
+	requiredLetters.forEach(entry => {
+	  entry.wrongPositions.forEach(pos => {
+		reqLetters.push(entry.letter);
+		reqIndices.push(pos);
+	  });
+	});
 
   return {
     currentWord: currentWord.map(c => c || " ").join(""),
     allowedLetters,
-    requiredLetters: requiredPairs.map(p => p.letter),
-    requiredLetterWrongIndices: requiredPairs.map(p => Number(p.wrongIndex)),
+    requiredLetters: reqLetters,
+    requiredLetterWrongIndices: reqIndices,
     maxSeconds: Number(maxSeconds),
     lang
   };
@@ -86,10 +125,10 @@ export default function App() {
 
     try {
 		
-		if (requiredPairs.some(p => p.wrongIndex >= wordLength)) {
-		  alert("Invalid required letter position for current word length");
-		  return;
-		}
+		//if (requiredPairs.some(p => p.wrongIndex >= wordLength)) {
+		//  alert("Invalid required letter position for current word length");
+		//  return;
+		//}
 
 		if (currentWord.length !== wordLength) {
 		  alert("Grid mismatch");
@@ -97,8 +136,8 @@ export default function App() {
 		}
 		
 		
-      const res = await fetch("/api/solve", {
-	  //const res = await fetch("http://192.168.100.22:8080/api/solve", {
+      //const res = await fetch("/api/solve", {
+	  const res = await fetch("http://192.168.100.22:8080/api/solve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -184,34 +223,32 @@ export default function App() {
 	  </div>
 
       <h3>Required Letters (Yellow)</h3>
-      {requiredPairs.map((pair, index) => (
-        <div key={index} style={styles.pairRow}>
-          <input
-            maxLength={1}
-            placeholder="Letter"
-            value={pair.letter}
-            onChange={(e) =>
-              updatePair(index, "letter", e.target.value.toLocaleLowerCase(lang))
-            }
-          />
-		  
-          <select
-		value={pair.wrongIndex}
-		onChange={(e) =>
-			updatePair(index, "wrongIndex", e.target.value)
-		}
-		>
-		{Array.from({ length: wordLength }, (_, pos) => (
-			<option key={pos} value={pos}>
-			Not in position {pos+1}
-			</option>
+      {requiredLetters.map((entry, i) => (
+		  <div key={i} style={{ marginBottom: "10px" }}>
+			
+			<input
+			  maxLength={1}
+			  value={entry.letter}
+			  onChange={(e) =>
+				updateRequiredLetter(i, e.target.value.toLocaleLowerCase(lang))
+			  }
+			  style={{ width: "30px", marginRight: "10px" }}
+			/>
+
+			{Array.from({ length: wordLength }, (_, pos) => (
+			  <label key={pos} style={{ marginRight: "6px" }}>
+				<input
+				  type="checkbox"
+				  checked={entry.wrongPositions.includes(pos)}
+				  onChange={() => toggleWrongPosition(i, pos)}
+				/>
+				{pos+1}
+			  </label>
+			))}
+
+		  </div>
 		))}
-		</select>
-		  
-          <button onClick={() => removePair(index)}>X</button>
-        </div>
-      ))}
-      <button onClick={addRequiredPair}>+ Add Required Letter</button>
+      <button onClick={addRequiredLetter}> + Add Required Letter </button>
 
       <h3>Excluded Letters (Gray)</h3>
       <input
