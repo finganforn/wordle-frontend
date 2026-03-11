@@ -19,6 +19,7 @@ import { useEffect } from "react";
 export default function App() {
 	
   const [wordLength, setWordLength] = useState(5);
+  const [darkMode, setDarkMode] = useState(false);  
   const [currentWord, setCurrentWord] = useState(
     Array(5).fill("")
 );	
@@ -31,10 +32,21 @@ export default function App() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   
+  const theme = {
+	background: darkMode ? "#121212" : "#ffffff",
+	text: darkMode ? "#e0e0e0" : "#000000",
+	tileBackground: darkMode ? "#1e1e1e" : "#ffffff",
+	border: darkMode ? "#555" : "#ccc"
+	};
+  
   useEffect(() => {
     setCurrentWord(Array(wordLength).fill(""));
     setRequiredPairs([]);
   }, [wordLength]);
+  
+  useEffect(() => {
+	  document.body.style.backgroundColor = darkMode ? "#121212" : "#ffffff";
+	}, [darkMode]);
 
   const addRequiredPair = () => {
     setRequiredPairs([...requiredPairs, { letter: "", wrongIndex: 0 }]);
@@ -102,7 +114,30 @@ export default function App() {
   };
 
   return (
-    <div style={styles.container}>
+    <div
+	  style={{
+		padding: "20px 40px",
+		//backgroundColor: theme.background,
+		color: theme.text,
+		minHeight: "100vh",
+		fontFamily: "Arial"
+	  }}
+	>
+	
+	  <div style={{ marginBottom: "20px" }}>
+		  <label style={{ cursor: "pointer" }}>
+			<input
+			  type="checkbox"
+			  checked={darkMode}
+			  onChange={(e) => setDarkMode(e.target.checked)}
+			  style={{ marginRight: "8px" }}
+			/>
+			Dark Mode
+		  </label>
+		</div>
+	
+	 
+	
       <h1>Erik's Wordle Solver</h1>
 	  
 	  <h3>Word Length</h3>
@@ -134,7 +169,16 @@ export default function App() {
         updated[i] = e.target.value.toLocaleLowerCase(lang);
         setCurrentWord(updated);
           }}
-          style={styles.tile}
+          //style={styles.tile}
+		  style={{
+			  width: "40px",
+			  height: "40px",
+			  textAlign: "center",
+			  fontSize: "18px",
+			  backgroundColor: theme.tileBackground,
+			  color: theme.text,
+			  border: `1px solid ${theme.border}`
+			}}
         />
       ))}
 	  </div>
@@ -213,7 +257,9 @@ export default function App() {
 
 const styles = {
   container: {
+	padding: "20px 40px",
     maxWidth: "600px",
+	minHeight: "100vh",
     margin: "40px auto",
     fontFamily: "Arial"
   },
