@@ -136,8 +136,8 @@ export default function App() {
 		}
 		
 		
-      //const res = await fetch("/api/solve", {
-	  const res = await fetch("http://192.168.100.22:8080/api/solve", {
+      const res = await fetch("/api/solve", {
+	  //const res = await fetch("http://192.168.100.22:8080/api/solve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
